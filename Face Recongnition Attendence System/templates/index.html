@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Face Recognition Attendance</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<div class="container text-center mt-5">
+
+    <h1 class="mb-4">🎯 Face Recognition Attendance</h1>
+
+    <!-- ================= BUTTONS ================= -->
+    <div class="mb-4">
+
+        <!-- Register -->
+        <a href="/register" class="btn btn-primary me-2">
+            Register Student
+        </a>
+
+        <!-- Take Attendance -->
+        <button class="btn btn-success me-2" onclick="startCamera()">
+            Take Attendance
+        </button>
+
+        <!-- View Attendance -->
+        <button class="btn btn-info me-2" onclick="loadAttendance()">
+            View Attendance
+        </button>
+
+        <!-- ✅ Train Model -->
+        <button class="btn btn-warning text-dark"
+                onclick="trainModel()">
+            Train Model
+        </button>
+
+    </div>
+
+
+    <!-- ================= STATUS ================= -->
+    <div id="status"></div>
+
+
+    <!-- ================= ATTENDANCE TABLE ================= -->
+    <div id="attendanceWrapper" style="display: none;">
+
+        <!-- Reset Button -->
+        <div class="text-end mb-2">
+
+            <button class="btn btn-danger btn-sm"
+                    onclick="resetAttendance()">
+                🔄 Reset Attendance
+            </button>
+
+        </div>
+
+        <table class="table table-bordered mt-4">
+            <thead class="table-dark">
+                <tr>
+                    <th>Name</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+
+            <tbody id="tableBody">
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+
+<!-- ================= JAVASCRIPT ================= -->
+<script>
+
+
+// ---------------- START CAMERA ----------------
+function startCamera() {
+
+    fetch("/start")
+    .then(res => res.json())
+    .then(data => {
+
+        document.getElementById("status").innerHTML =
+        "<div class='alert alert-success'>" +
+        data.status +
+        "</div>";
+
+    });
+
+}
+
+
+// ---------------- LOAD ATTENDANCE ----------------
+function loadAttendance() {
+
+    fetch("/attendance")
+    .then(res => res.json())
+    .then(data => {
+
+        let tbody = document.getElementById("tableBody");
+
+        tbody.innerHTML = "";
+
+        data.forEach(row => {
+
+            let tr = document.createElement("tr");
+
+            tr.innerHTML = `
+                <td>${row[0]}</td>
+                <td>${row[1]}</td>
+                <td>${row[2]}</td>
+            `;
+
+            tbody.appendChild(tr);
+
+        });
+
+        // Show table
+        document.getElementById("attendanceWrapper")
+        .style.display = "block";
+
+    });
+
+}
+
+
+// ---------------- RESET ATTENDANCE ----------------
+function resetAttendance(){
+
+    if(!confirm("⚠️ Are you sure? This will delete all attendance records!")){
+        return;
+    }
+
+    fetch("/reset_attendance")
+    .then(res => res.json())
+    .then(data => {
+
+        alert(data.status);
+
+        loadAttendance();
+
+    })
+    .catch(err => alert("Error: " + err));
+
+}
+
+
+// ---------------- TRAIN MODEL ----------------
+function trainModel(){
+
+    document.getElementById("status").innerHTML =
+    "<div class='alert alert-warning'>" +
+    "⏳ Training model... Please wait..." +
+    "</div>";
+
+    fetch("/train")
+    .then(res => res.json())
+    .then(data => {
+
+        document.getElementById("status").innerHTML =
+        "<div class='alert alert-success'>" +
+        data.status +
+        "</div>";
+
+    })
+    .catch(err => {
+
+        document.getElementById("status").innerHTML =
+        "<div class='alert alert-danger'>" +
+        "Training failed!" +
+        "</div>";
+
+    });
+
+}
+
+</script>
+
+</body>
+</html>
